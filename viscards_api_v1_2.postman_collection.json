@@ -1,0 +1,559 @@
+{
+  "info": {
+    "name": "VisCards API (v1.2)",
+    "_postman_id": "d9f1e2f1-4e1a-4c54-9b0f-5a1f0a2f1b7c",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": "<PASTE_TOKEN_HERE>"
+    },
+    {
+      "key": "card_id",
+      "value": "10"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth - Send SMS (registration)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/sms/send"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+79990001122\",\n  \"purpose\": \"registration\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - Verify SMS (get token)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/sms/verify"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+79990001122\",\n  \"code\": \"123456\",\n  \"purpose\": \"registration\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Auth - Password Reset Confirm",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/password/reset/confirm"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+79990001122\",\n  \"code\": \"123456\",\n  \"new_password\": \"NewStrongPass123\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Get Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Update Me",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_name\": \"Сергей\",\n  \"email\": \"me@example.com\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Email Send Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me/email/send-code"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"me@example.com\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Email Verify",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me/email/verify"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"me@example.com\",\n  \"code\": \"654321\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Phone Change Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me/phone/change/request"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"new_phone\": \"+79995556677\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Phone Change Confirm",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me/phone/change/confirm"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"new_phone\": \"+79995556677\",\n  \"code\": \"123456\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Password Set",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me/password/set"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"password\": \"StrongPass123\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Profile - Password Change",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/me/password/change"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"old_password\": \"StrongPass123\",\n  \"new_password\": \"StrongPass456\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cards - List (Рабочие)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards?label=Рабочие&include_inactive=false"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cards - Create (manual)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"label\": \"Рабочие\",\n  \"contact_name\": \"Иван Иванов\",\n  \"job_title\": \"Product Manager\",\n  \"company\": \"ООО Ромашка\",\n  \"photo_url\": \"https://storage.yandexcloud.net/bucket/card-front.jpg\",\n  \"contact_fields\": [\n    {\n      \"field_type\": \"phone\",\n      \"field_value\": \"+79001112233\"\n    },\n    {\n      \"field_type\": \"email\",\n      \"field_value\": \"ivan@example.com\"\n    }\n  ]\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cards - Get by Id",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/{card_id}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cards - Update by Id",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/{card_id}"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"company\": \"ООО Ромашка 2\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cards - Delete (soft)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/{card_id}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cards - Get Side (back)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/{card_id}/side?side=back"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "QR - Generate Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/{card_id}/qr-token"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "QR - Import by Scan",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/import/qr"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"scanned_data\": \"viscard://v1?name=Ivan%20Ivanov&phone=%2B79001112233\",\n  \"label\": \"Рабочие\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "OCR - Import by Photo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/import/photo"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image_url\": \"https://storage.yandexcloud.net/bucket/photo.jpg\",\n  \"label\": \"Рабочие\",\n  \"meta\": {\n    \"side\": \"front\"\n  }\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "OCR - Scans List",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/{card_id}/scans"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "OCR - Add Scan to Card",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/cards/{card_id}/scans"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image_url\": \"https://storage.yandexcloud.net/bucket/photo-back.jpg\",\n  \"meta\": {\n    \"side\": \"back\"\n  }\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Feedback - Send",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/feedback"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"Хочу предложить улучшение...\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Devices - Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/devices"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"device_id\": \"A1B2C3D4\",\n  \"device_type\": \"ios\",\n  \"os_version\": \"17.2\",\n  \"app_version\": \"1.0.0\"\n}"
+        }
+      },
+      "response": []
+    }
+  ]
+}
