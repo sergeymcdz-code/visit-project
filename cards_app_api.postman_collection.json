@@ -1,0 +1,857 @@
+{
+  "info": {
+    "_postman_id": "8eb52f53-f4b7-42be-b821-9db856e96073",
+    "name": "Cards App Backend API (v1)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://sergeymcdz-code.github.io/smart-pricing-api-docs"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "cardId",
+      "value": "1"
+    },
+    {
+      "key": "scanId",
+      "value": "1"
+    },
+    {
+      "key": "qrToken",
+      "value": "example-token"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Send SMS code",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/sms/send",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "sms",
+                "send"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+79990001122\",\n  \"purpose\": \"registration\"\n}"
+            }
+          },
+          "description": "sms_codes: purpose = registration/change_phone/change_password. attempts_count CHECK<=3, is_blocked, expires_at."
+        },
+        {
+          "name": "Verify SMS code (issue token)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/sms/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "sms",
+                "verify"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+79990001122\",\n  \"code\": \"123456\",\n  \"purpose\": \"registration\"\n}"
+            }
+          },
+          "description": "Проверка sms_codes и выдача access token (Bearer)."
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get my profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "users: phone/email/is_email_verified/user_name."
+        },
+        {
+          "name": "Update profile (name/email)",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_name\": \"Сергей\",\n  \"email\": \"me@example.com\"\n}"
+            }
+          },
+          "description": "Обновление users."
+        },
+        {
+          "name": "Send code to change phone",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/phone/send-code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "phone",
+                "send-code"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_phone\": \"+79990002233\"\n}"
+            }
+          },
+          "description": "sms_codes purpose=change_phone."
+        },
+        {
+          "name": "Confirm phone change",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/phone/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "phone",
+                "confirm"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"new_phone\": \"+79990002233\",\n  \"code\": \"123456\"\n}"
+            }
+          },
+          "description": "Обновляет users.phone."
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "password"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"old_password\": \"old\",\n  \"new_password\": \"newStrongPassword\"\n}"
+            }
+          },
+          "description": "users.password_hash."
+        },
+        {
+          "name": "Send email verification code",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/email/send-code",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "email",
+                "send-code"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"me@example.com\"\n}"
+            }
+          },
+          "description": "email_codes purpose=verify_email."
+        },
+        {
+          "name": "Verify email",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/email/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "me",
+                "email",
+                "verify"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"me@example.com\",\n  \"code\": \"123456\"\n}"
+            }
+          },
+          "description": "users.is_email_verified=true."
+        }
+      ]
+    },
+    {
+      "name": "Cards",
+      "item": [
+        {
+          "name": "Create card (manual)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Личные\",\n  \"contact_name\": \"Иван Петров\",\n  \"job_title\": \"Sales\",\n  \"company\": \"ООО Ромашка\",\n  \"notes\": \"Познакомились на конференции\",\n  \"photo_url\": null,\n  \"contact_fields\": [\n    {\n      \"phone\": \"+79001112233\",\n      \"website\": \"https://romashka.ru\",\n      \"other_contacts\": \"telegram: @ivan\"\n    }\n  ]\n}"
+            }
+          },
+          "description": "business_cards + contact_fields. label: 'Рабочие'/'Личные'. is_active=true."
+        },
+        {
+          "name": "List cards",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards?label=Личные&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards"
+              ],
+              "query": [
+                {
+                  "key": "label",
+                  "value": "Личные"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "По умолчанию только is_active=true."
+        },
+        {
+          "name": "Get card details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/{{cardId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "{{cardId}}"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "Детали визитки и contact_fields."
+        },
+        {
+          "name": "Update card",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/{{cardId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "{{cardId}}"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Рабочие\",\n  \"contact_name\": \"Иван Петров\",\n  \"job_title\": \"Head of Sales\",\n  \"company\": \"ООО Ромашка\",\n  \"notes\": \"Апдейт после звонка\",\n  \"photo_url\": null,\n  \"contact_fields\": [\n    {\n      \"id\": 1,\n      \"phone\": \"+79001112233\",\n      \"website\": \"https://romashka.ru\",\n      \"other_contacts\": \"telegram: @ivan\"\n    }\n  ]\n}"
+            }
+          },
+          "description": "Обновляет business_cards и contact_fields."
+        },
+        {
+          "name": "Delete card (soft-delete)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/{{cardId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "{{cardId}}"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "Ставит business_cards.is_active=false."
+        },
+        {
+          "name": "Search cards",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/search?q=Петров&label=Рабочие&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Петров"
+                },
+                {
+                  "key": "label",
+                  "value": "Рабочие"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "Поиск по полям визитки (реализация на бэке)."
+        }
+      ]
+    },
+    {
+      "name": "QR",
+      "item": [
+        {
+          "name": "Generate QR token",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/{{cardId}}/qr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "{{cardId}}",
+                "qr"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "Заполняет business_cards.qr_token."
+        },
+        {
+          "name": "Import card by QR",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/import/qr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "import",
+                "qr"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_token\": \"{{qrToken}}\",\n  \"label\": \"Личные\"\n}"
+            }
+          },
+          "description": "Создаёт новую визитку и пишет qr_scans.scanned_data."
+        }
+      ]
+    },
+    {
+      "name": "OCR & Scans",
+      "item": [
+        {
+          "name": "Upload photo for OCR (scan)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/{{cardId}}/scans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "{{cardId}}",
+                "scans"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "description": "card_scans: image_url, ocr_raw_data, ocr_processed_data, confidence."
+        },
+        {
+          "name": "List scans",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/{{cardId}}/scans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "{{cardId}}",
+                "scans"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "Список card_scans по card_id."
+        },
+        {
+          "name": "Get back side (image_url)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/{{cardId}}/back",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "{{cardId}}",
+                "back"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "Оборот визитки берём из последнего scan.image_url."
+        },
+        {
+          "name": "Create card from photo (OCR -> create)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cards/from-photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cards",
+                "from-photo"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "label",
+                  "value": "Личные",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            }
+          },
+          "description": "Создаёт card + scan из фото (парсинг данных)."
+        }
+      ]
+    },
+    {
+      "name": "Feedback",
+      "item": [
+        {
+          "name": "Send feedback",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feedback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feedback"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Не работает импорт по QR\",\n  \"status\": \"new\"\n}"
+            }
+          },
+          "description": "feedback.status: new/read/replied/closed."
+        },
+        {
+          "name": "List my feedback",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/feedback?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "feedback"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "feedback по user_id."
+        }
+      ]
+    },
+    {
+      "name": "Devices",
+      "item": [
+        {
+          "name": "Register device",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/devices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "devices"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_type\": \"ios\",\n  \"app_version\": \"1.0.0\"\n}"
+            }
+          },
+          "description": "user_devices: device_type ios/android, app_version, last_active."
+        },
+        {
+          "name": "List devices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/devices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "devices"
+              ]
+            },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ]
+          },
+          "description": "Список user_devices."
+        }
+      ]
+    }
+  ]
+}
