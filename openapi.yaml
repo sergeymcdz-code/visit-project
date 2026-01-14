@@ -1,0 +1,864 @@
+openapi: 3.0.3
+info:
+  title: Business Cards App API
+  version: "1.0.0"
+  description: >
+    API backend мобильного приложения для хранения визиток.
+    Контракт построен на основе структуры БД: users, sms_codes/email_codes,
+    business_cards/contact_fields, card_scans/qr_scans, feedback, user_devices.
+servers:
+  - url: https://example.com
+    description: Production (пример)
+  - url: http://localhost:8080
+    description: Local (пример)
+
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Cards
+  - name: OCR
+  - name: QR
+  - name: Feedback
+  - name: Devices
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: label must be one of: Рабочие, Личные
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: label
+                  issue:
+                    type: string
+                    example: invalid_enum
+            traceId:
+              type: string
+              example: "c0a8012e-7b5a-4b44-a1d0-4c9f0f2f3c01"
+    SmsSendRequest:
+      type: object
+      required: [phone, purpose]
+      properties:
+        phone:
+          type: string
+          example: "+79990001122"
+        purpose:
+          type: string
+          description: "registration | change_phone | change_password"
+          example: "registration"
+    SmsSendResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            sms_id:
+              type: integer
+              example: 123
+            expires_at:
+              type: string
+              format: date-time
+              example: "2026-01-14T12:02:00Z"
+    SmsVerifyRequest:
+      type: object
+      required: [phone, code, purpose]
+      properties:
+        phone:
+          type: string
+          example: "+79990001122"
+        code:
+          type: string
+          example: "123456"
+        purpose:
+          type: string
+          example: "registration"
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_name:
+          type: string
+          example: "Сергей"
+        phone:
+          type: string
+          example: "+79990001122"
+        email:
+          type: string
+          nullable: true
+          example: "me@example.com"
+        is_email_verified:
+          type: boolean
+          example: false
+        avatar_url:
+          type: string
+          nullable: true
+          example: "https://.../avatar.png"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SmsVerifyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              example: "<jwt>"
+            user:
+              $ref: "#/components/schemas/User"
+
+    ContactFields:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          example: "+79001112233"
+        website:
+          type: string
+          nullable: true
+          example: "https://romashka.ru"
+        other_contacts:
+          type: string
+          nullable: true
+          example: "tg:@ivan"
+    BusinessCard:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        label:
+          type: string
+          enum: ["Рабочие", "Личные"]
+          example: "Рабочие"
+        contact_name:
+          type: string
+          example: "Иван Петров"
+        job_title:
+          type: string
+          nullable: true
+          example: "Sales"
+        company:
+          type: string
+          nullable: true
+          example: "ООО Ромашка"
+        notes:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        qr_token:
+          type: string
+          nullable: true
+          description: "Токен для импорта по QR"
+        is_active:
+          type: boolean
+          example: true
+        contact_fields:
+          $ref: "#/components/schemas/ContactFields"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CardCreateRequest:
+      type: object
+      required: [label, contact_name, contact_fields]
+      properties:
+        label:
+          type: string
+          enum: ["Рабочие", "Личные"]
+        contact_name:
+          type: string
+        job_title:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        contact_fields:
+          $ref: "#/components/schemas/ContactFields"
+    CardCreateResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/BusinessCard"
+    CardsListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessCard"
+        meta:
+          type: object
+          properties:
+            limit:
+              type: integer
+              example: 20
+            offset:
+              type: integer
+              example: 0
+
+    CardPatchRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          enum: ["Рабочие", "Личные"]
+        contact_name:
+          type: string
+        job_title:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        contact_fields:
+          $ref: "#/components/schemas/ContactFields"
+
+    DeleteCardResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 10
+            is_active:
+              type: boolean
+              example: false
+
+    EmailSendRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          example: "me@example.com"
+    EmailSendResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            email_id:
+              type: integer
+              example: 55
+            expires_at:
+              type: string
+              format: date-time
+    EmailVerifyRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email:
+          type: string
+        code:
+          type: string
+          example: "123456"
+    EmailVerifyResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            is_email_verified:
+              type: boolean
+              example: true
+
+    PasswordChangeRequest:
+      type: object
+      required: [old_password, new_password]
+      properties:
+        old_password:
+          type: string
+        new_password:
+          type: string
+    SimpleOkResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            changed:
+              type: boolean
+              example: true
+
+    QrGenerateResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            qr_token:
+              type: string
+              example: "uuid"
+    QrImportRequest:
+      type: object
+      required: [qr_token, label]
+      properties:
+        qr_token:
+          type: string
+        label:
+          type: string
+          enum: ["Рабочие", "Личные"]
+
+    FeedbackCreateRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: "Не работает импорт по QR на iOS"
+        contact:
+          type: string
+          nullable: true
+          example: "me@example.com"
+    FeedbackItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum: ["new", "read", "replied", "closed"]
+          example: "new"
+        message:
+          type: string
+        answer:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    FeedbackListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FeedbackItem"
+
+    DeviceUpsertRequest:
+      type: object
+      required: [device_type, app_version]
+      properties:
+        device_type:
+          type: string
+          enum: ["ios", "android"]
+        app_version:
+          type: string
+          example: "1.0.0"
+    DeviceItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        device_type:
+          type: string
+          enum: ["ios", "android"]
+        app_version:
+          type: string
+        last_active:
+          type: string
+          format: date-time
+    DevicesListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeviceItem"
+
+paths:
+  /api/v1/auth/sms/send:
+    post:
+      tags: [Auth]
+      summary: Отправить SMS-код
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SmsSendRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SmsSendResponse" }
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/v1/auth/sms/verify:
+    post:
+      tags: [Auth]
+      summary: Проверить SMS-код и получить токен
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SmsVerifyRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SmsVerifyResponse" }
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "401":
+          description: Wrong code
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "423":
+          description: Blocked after too many attempts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/v1/me:
+    get:
+      tags: [Profile]
+      summary: Получить профиль
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: "#/components/schemas/User" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    patch:
+      tags: [Profile]
+      summary: Обновить профиль
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_name: { type: string }
+                email: { type: string, nullable: true }
+                avatar_url: { type: string, nullable: true }
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "409":
+          description: Conflict (email already used)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/v1/me/password:
+    put:
+      tags: [Profile]
+      summary: Сменить пароль аккаунта
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PasswordChangeRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimpleOkResponse" }
+
+  /api/v1/me/email/send-code:
+    post:
+      tags: [Profile]
+      summary: Отправить код подтверждения email
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailSendRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailSendResponse" }
+
+  /api/v1/me/email/verify:
+    post:
+      tags: [Profile]
+      summary: Подтвердить email кодом
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailVerifyRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailVerifyResponse" }
+
+  /api/v1/cards:
+    post:
+      tags: [Cards]
+      summary: Создать визитку (ручной ввод)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CardCreateRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardCreateResponse" }
+    get:
+      tags: [Cards]
+      summary: Список визиток (фильтр по label)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: label
+          schema:
+            type: string
+            enum: ["Рабочие", "Личные"]
+        - in: query
+          name: limit
+          schema: { type: integer, example: 20 }
+        - in: query
+          name: offset
+          schema: { type: integer, example: 0 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CardsListResponse" }
+
+  /api/v1/cards/{id}:
+    get:
+      tags: [Cards]
+      summary: Детали визитки
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+    patch:
+      tags: [Cards]
+      summary: Обновить визитку
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CardPatchRequest" }
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [Cards]
+      summary: Soft-delete визитки (is_active=false)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeleteCardResponse" }
+
+  /api/v1/cards/search:
+    get:
+      tags: [Cards]
+      summary: Поиск визиток
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+        - in: query
+          name: label
+          schema:
+            type: string
+            enum: ["Рабочие", "Личные"]
+      responses:
+        "200":
+          description: OK
+
+  /api/v1/cards/{id}/scans:
+    post:
+      tags: [OCR]
+      summary: Загрузить фото визитки (OCR) и создать запись card_scans
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Created
+    get:
+      tags: [OCR]
+      summary: История сканов визитки
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /api/v1/cards/{id}/back:
+    get:
+      tags: [OCR]
+      summary: Обратная сторона визитки (последний scan.image_url)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+
+  /api/v1/cards/from-photo:
+    post:
+      tags: [OCR]
+      summary: Создать визитку из фото (OCR → business_cards + contact_fields + card_scans)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, label]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                label:
+                  type: string
+                  enum: ["Рабочие", "Личные"]
+      responses:
+        "201":
+          description: Created
+
+  /api/v1/cards/{id}/qr:
+    post:
+      tags: [QR]
+      summary: Сгенерировать/обновить qr_token для визитки
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QrGenerateResponse" }
+
+  /api/v1/cards/import/qr:
+    post:
+      tags: [QR]
+      summary: Импорт визитки по qr_token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QrImportRequest" }
+      responses:
+        "201":
+          description: Created
+
+  /api/v1/feedback:
+    post:
+      tags: [Feedback]
+      summary: Отправить обратную связь
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FeedbackCreateRequest" }
+      responses:
+        "201":
+          description: Created
+    get:
+      tags: [Feedback]
+      summary: Список обращений пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FeedbackListResponse" }
+
+  /api/v1/devices:
+    post:
+      tags: [Devices]
+      summary: Зарегистрировать устройство пользователя
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeviceUpsertRequest" }
+      responses:
+        "201":
+          description: Created
+    get:
+      tags: [Devices]
+      summary: Список устройств пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DevicesListResponse" }
+
+security:
+  - bearerAuth: []
