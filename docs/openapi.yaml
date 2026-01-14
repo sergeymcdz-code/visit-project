@@ -1,16 +1,13 @@
-<details>
-<summary><strong>Нажми, чтобы раскрыть корректный openapi.yaml</strong></summary>
 openapi: 3.0.3
+
 info:
-  title: Business Cards App API
+  title: Business Cards API
   version: "1.0.0"
-  description: API backend мобильного приложения для хранения визиток
+  description: Backend API for business cards mobile application
 
 servers:
-  - url: https://example.com
-    description: Production (пример)
+  - url: https://api.example.com
   - url: http://localhost:8080
-    description: Local (пример)
 
 tags:
   - name: Auth
@@ -19,7 +16,7 @@ tags:
   - name: OCR
   - name: QR
   - name: Feedback
-  - name: Devices
+  - name: Security
 
 components:
   securitySchemes:
@@ -29,152 +26,132 @@ components:
       bearerFormat: JWT
 
   schemas:
-    ErrorResponse:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-            traceId:
-              type: string
-
-    SmsSendRequest:
-      type: object
-      required:
-        - phone
-        - purpose
-      properties:
-        phone:
-          type: string
-        purpose:
-          type: string
-          enum: [registration, change_phone, change_password]
-
-    SmsVerifyRequest:
-      type: object
-      required:
-        - phone
-        - code
-        - purpose
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-        purpose:
-          type: string
-
     User:
       type: object
       properties:
         id:
           type: integer
-        user_name:
-          type: string
         phone:
           type: string
         email:
           type: string
-        is_email_verified:
-          type: boolean
-
-    ContactFields:
-      type: object
-      properties:
-        phone:
-          type: string
-        website:
-          type: string
-        other_contacts:
+        name:
           type: string
 
-    BusinessCard:
+    Card:
       type: object
       properties:
         id:
           type: integer
         label:
           type: string
-          enum: ["Рабочие", "Личные"]
-        contact_name:
+          enum: [Рабочие, Личные]
+        name:
           type: string
         company:
           type: string
+        position:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
         is_active:
           type: boolean
-        contact_fields:
-          $ref: "#/components/schemas/ContactFields"
 
 paths:
-  /api/v1/auth/sms/send:
+  /api/v1/auth/send-code:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Send SMS code
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SmsSendRequest"
+              type: object
+              properties:
+                phone:
+                  type: string
       responses:
         "200":
-          description: OK
+          description: Code sent
 
-  /api/v1/auth/sms/verify:
+  /api/v1/auth/verify-code:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Verify SMS code
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SmsVerifyRequest"
+              type: object
+              properties:
+                phone:
+                  type: string
+                code:
+                  type: string
       responses:
         "200":
-          description: OK
+          description: Token issued
 
   /api/v1/cards:
     get:
-      tags: [Cards]
-      summary: List cards
+      tags:
+        - Cards
+      summary: Get all cards
       responses:
         "200":
-          description: OK
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+
     post:
-      tags: [Cards]
-      summary: Create card
+      tags:
+        - Cards
+      summary: Create new card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Card"
       responses:
         "201":
           description: Created
 
   /api/v1/cards/{id}:
     get:
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Get card
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
           schema:
             type: integer
       responses:
         "200":
           description: OK
+
     delete:
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Soft delete card
       parameters:
-        - name: id
-          in: path
+        - in: path
+          name: id
           required: true
           schema:
             type: integer
       responses:
         "200":
-          description: OK
-          </details>
+          description: Deleted
