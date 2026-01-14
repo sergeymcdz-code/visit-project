@@ -91,23 +91,8 @@ API_TZ_VisCards_v1_2_checked.docx
  • Feedback
  • Безопасность (PIN)
 
-⸻
-
-Технологический стек (логический)
- • REST API
- • OpenAPI 3.x
- • JWT authentication
- • PostgreSQL (по структуре БД)
- • OCR & QR processing
-
-⸻
-
-Назначение проекта
-
-Проект выполнен в рамках защиты учебного кейса:
-“Мобильное приложение для управления визитками”
 
 API реализовано как production-style backend:
- • контракт-first
+ • API-first
  • документирован
  • готов к подключению мобильных клиентов
