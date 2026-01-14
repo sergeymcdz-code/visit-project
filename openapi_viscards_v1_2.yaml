@@ -1,0 +1,1352 @@
+openapi: 3.0.3
+info:
+  title: VisCards Backend API
+  version: 1.2.0
+  description: Документация к API backend-составляющей мобильного приложения для хранения визиток (Android/iOS).
+servers:
+- url: http://localhost:8080
+  description: Локальный сервер (пример)
+- url: https://api.example.com
+  description: Прод (пример)
+tags:
+- name: Auth
+- name: Profile
+- name: Cards
+- name: QR
+- name: OCR
+- name: Feedback
+- name: Devices
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Label:
+      type: string
+      enum:
+      - Рабочие
+      - Личные
+    FieldType:
+      type: string
+      enum:
+      - telegram
+      - phone
+      - website
+      - email
+      - other_contacts
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Validation failed
+            details:
+              type: array
+              items:
+                type: object
+            traceId:
+              type: string
+              example: c0a8012e-7b5a-4b44-a1d0-4c9f0f2f3c01
+          required:
+          - code
+          - message
+      required:
+      - error
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        is_active:
+          type: boolean
+          example: true
+        user_name:
+          type: string
+          example: Сергей
+        phone:
+          type: string
+          example: '+79990001122'
+        email:
+          type: string
+          nullable: true
+          example: me@example.com
+        avatar_url:
+          type: string
+          example: default_avatar.jpg
+        created_date:
+          type: string
+          format: date-time
+          example: '2026-01-14T12:00:00Z'
+        updated_date:
+          type: string
+          format: date-time
+          example: '2026-01-14T12:00:00Z'
+        has_password:
+          type: boolean
+          example: true
+          description: В БД users.password_hash NOT NULL, но для клиента выводим флаг, чтобы понимать включена ли защита паролем.
+      required:
+      - id
+      - is_active
+      - user_name
+      - phone
+      - avatar_url
+      - created_date
+      - updated_date
+      - has_password
+    ContactField:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        card_id:
+          type: integer
+          example: 10
+        field_type:
+          $ref: '#/components/schemas/FieldType'
+        field_value:
+          type: string
+          example: '+79001112233'
+        created_date:
+          type: string
+          format: date-time
+          example: '2026-01-14T12:00:00Z'
+        updated_date:
+          type: string
+          format: date-time
+          example: '2026-01-14T12:00:00Z'
+      required:
+      - id
+      - card_id
+      - field_type
+      - field_value
+    BusinessCard:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 10
+        user_id:
+          type: integer
+          example: 1
+        is_active:
+          type: boolean
+          example: true
+        created_date:
+          type: string
+          format: date-time
+          example: '2026-01-14T12:00:00Z'
+        updated_date:
+          type: string
+          format: date-time
+          example: '2026-01-14T12:00:00Z'
+        label:
+          $ref: '#/components/schemas/Label'
+        qr_token:
+          type: string
+          nullable: true
+          example: b5f3b6d8-5fe5-4a80-9d20-2c3f2f5b8d4a
+        contact_name:
+          type: string
+          example: Иван Иванов
+        job_title:
+          type: string
+          nullable: true
+          example: Product Manager
+        company:
+          type: string
+          nullable: true
+          example: ООО Ромашка
+        photo_url:
+          type: string
+          nullable: true
+          example: https://storage.yandexcloud.net/bucket/card-front.jpg
+        contact_fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactField'
+      required:
+      - id
+      - user_id
+      - is_active
+      - created_date
+      - updated_date
+      - label
+      - contact_name
+      - contact_fields
+    BusinessCardCreateRequest:
+      type: object
+      properties:
+        label:
+          $ref: '#/components/schemas/Label'
+        contact_name:
+          type: string
+        job_title:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        contact_fields:
+          type: array
+          items:
+            type: object
+            properties:
+              field_type:
+                $ref: '#/components/schemas/FieldType'
+              field_value:
+                type: string
+            required:
+            - field_type
+            - field_value
+      required:
+      - label
+      - contact_name
+    BusinessCardUpdateRequest:
+      type: object
+      properties:
+        label:
+          $ref: '#/components/schemas/Label'
+        contact_name:
+          type: string
+        job_title:
+          type: string
+          nullable: true
+        company:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        contact_fields:
+          type: array
+          items:
+            type: object
+            properties:
+              field_type:
+                $ref: '#/components/schemas/FieldType'
+              field_value:
+                type: string
+            required:
+            - field_type
+            - field_value
+    SmsSendRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          example: '+79990001122'
+        purpose:
+          type: string
+          enum:
+          - registration
+          - change_phone
+          - change_password
+          example: registration
+      required:
+      - phone
+      - purpose
+    SmsSendResponse:
+      type: object
+      properties:
+        sms_code_id:
+          type: integer
+          example: 555
+        expires_at:
+          type: string
+          format: date-time
+          example: '2026-01-14T12:00:00Z'
+        purpose:
+          type: string
+          example: registration
+      required:
+      - sms_code_id
+      - expires_at
+      - purpose
+    SmsVerifyRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          example: '+79990001122'
+        code:
+          type: string
+          example: '123456'
+        purpose:
+          type: string
+          enum:
+          - registration
+          - change_phone
+          - change_password
+          example: registration
+      required:
+      - phone
+      - code
+      - purpose
+    AuthTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        token_type:
+          type: string
+          example: Bearer
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - access_token
+      - token_type
+      - user
+    MeUpdateRequest:
+      type: object
+      properties:
+        user_name:
+          type: string
+        email:
+          type: string
+          nullable: true
+    EmailSendCodeRequest:
+      type: object
+      properties:
+        email:
+          type: string
+      required:
+      - email
+    EmailVerifyRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        code:
+          type: string
+      required:
+      - email
+      - code
+    PhoneChangeRequest:
+      type: object
+      properties:
+        new_phone:
+          type: string
+      required:
+      - new_phone
+    PhoneChangeConfirm:
+      type: object
+      properties:
+        new_phone:
+          type: string
+        code:
+          type: string
+      required:
+      - new_phone
+      - code
+    PasswordSetRequest:
+      type: object
+      properties:
+        password:
+          type: string
+      required:
+      - password
+    PasswordChangeRequest:
+      type: object
+      properties:
+        old_password:
+          type: string
+        new_password:
+          type: string
+      required:
+      - old_password
+      - new_password
+    PasswordResetConfirmRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+        new_password:
+          type: string
+      required:
+      - phone
+      - code
+      - new_password
+    FeedbackCreateRequest:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    FeedbackResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        status:
+          type: string
+          enum:
+          - new
+          - read
+          - replied
+          - closed
+        message:
+          type: string
+      required:
+      - id
+      - user_id
+      - status
+      - message
+    DeviceRegisterRequest:
+      type: object
+      properties:
+        device_id:
+          type: string
+        device_type:
+          type: string
+          enum:
+          - ios
+          - android
+        os_version:
+          type: string
+        app_version:
+          type: string
+      required:
+      - device_id
+      - device_type
+      - os_version
+      - app_version
+    DeviceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        device_id:
+          type: string
+        device_type:
+          type: string
+        os_version:
+          type: string
+        app_version:
+          type: string
+        last_active:
+          type: string
+          format: date-time
+        created_date:
+          type: string
+          format: date-time
+      required:
+      - id
+      - user_id
+      - device_id
+      - device_type
+      - os_version
+      - app_version
+      - last_active
+      - created_date
+    QrTokenResponse:
+      type: object
+      properties:
+        card_id:
+          type: integer
+        qr_token:
+          type: string
+        qr_payload:
+          type: string
+      required:
+      - card_id
+      - qr_token
+      - qr_payload
+    QrImportRequest:
+      type: object
+      properties:
+        scanned_data:
+          type: string
+        label:
+          $ref: '#/components/schemas/Label'
+      required:
+      - scanned_data
+      - label
+    PhotoImportRequest:
+      type: object
+      properties:
+        image_url:
+          type: string
+        label:
+          $ref: '#/components/schemas/Label'
+        meta:
+          type: object
+          additionalProperties: true
+          description: Можно передать meta.side=front|back; сохраняется в card_scans.ocr_processed_data.meta (JSONB).
+      required:
+      - image_url
+      - label
+    CardScanResponse:
+      type: object
+      properties:
+        scan_id:
+          type: integer
+        card:
+          $ref: '#/components/schemas/BusinessCard'
+        confidence:
+          type: number
+          format: float
+        image_url:
+          type: string
+        ocr_processed_data:
+          type: object
+          additionalProperties: true
+        created_date:
+          type: string
+          format: date-time
+      required:
+      - scan_id
+      - card
+      - confidence
+      - image_url
+      - created_date
+security:
+- bearerAuth: []
+paths:
+  /api/v1/auth/sms/send:
+    post:
+      tags:
+      - Auth
+      security: []
+      summary: 'Регистрация/операции по телефону: отправить SMS-код (sms_codes)'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsSendRequest'
+      responses:
+        '200':
+          description: Код создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSendResponse'
+        '400':
+          description: Ошибка запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Лимит попыток/блокировка (attempts_count<=3, is_blocked)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/sms/verify:
+    post:
+      tags:
+      - Auth
+      security: []
+      summary: 'Аутентификация по коду: подтвердить SMS и получить токен'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsVerifyRequest'
+      responses:
+        '200':
+          description: Токен выдан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '400':
+          description: Ошибка запроса/валидация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Код недействителен/использован/заблокирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/auth/password/reset/confirm:
+    post:
+      tags:
+      - Auth
+      security: []
+      summary: Сменить пароль по SMS (purpose=change_password)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required:
+                - status
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Неверный/просроченный код
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/me:
+    get:
+      tags:
+      - Profile
+      summary: Получить профиль пользователя (users)
+      responses:
+        '200':
+          description: Профиль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+      - Profile
+      summary: Обновить профиль (имя/email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeUpdateRequest'
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/me/email/send-code:
+    post:
+      tags:
+      - Profile
+      summary: Отправить код подтверждения email (email_codes purpose=verify_email)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailSendCodeRequest'
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: sent
+                required:
+                - status
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/me/email/verify:
+    post:
+      tags:
+      - Profile
+      summary: Подтвердить email кодом (email_codes)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailVerifyRequest'
+      responses:
+        '200':
+          description: ОК (возвращаем профиль)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Неверный/просроченный код
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/me/phone/change/request:
+    post:
+      tags:
+      - Profile
+      summary: Запросить смену номера (SMS на new_phone, purpose=change_phone)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneChangeRequest'
+      responses:
+        '200':
+          description: Код создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSendResponse'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/me/phone/change/confirm:
+    post:
+      tags:
+      - Profile
+      summary: Подтвердить смену номера (код для new_phone)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneChangeConfirm'
+      responses:
+        '200':
+          description: ОК (возвращаем профиль)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Неверный/просроченный код
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/me/password/set:
+    post:
+      tags:
+      - Profile
+      summary: Задать пароль (users.password_hash)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordSetRequest'
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required:
+                - status
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/me/password/change:
+    post:
+      tags:
+      - Profile
+      summary: Сменить пароль (old_password → new_password)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required:
+                - status
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Неверный old_password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cards:
+    get:
+      tags:
+      - Cards
+      summary: Просмотр всех визиток (business_cards)
+      parameters:
+      - name: label
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Label'
+        description: 'Раздел: Рабочие/Личные'
+      - name: include_inactive
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+        description: Если true — вернуть и is_active=false
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BusinessCard'
+                  count:
+                    type: integer
+                required:
+                - items
+                - count
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - Cards
+      summary: Добавить визитку (ручной ввод)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessCardCreateRequest'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessCard'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cards/{card_id}:
+    get:
+      tags:
+      - Cards
+      summary: Просмотр детальной информации визитки
+      parameters:
+      - name: card_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessCard'
+        '404':
+          description: Не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags:
+      - Cards
+      summary: Редактирование визитки
+      parameters:
+      - name: card_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessCardUpdateRequest'
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessCard'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+      - Cards
+      summary: Удаление визитки (soft-delete через business_cards.is_active=false)
+      parameters:
+      - name: card_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: Удалено
+        '404':
+          description: Не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cards/{card_id}/side:
+    get:
+      tags:
+      - Cards
+      - OCR
+      summary: Просмотр обратной/лицевой стороны визитки (по card_scans)
+      parameters:
+      - name: card_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: side
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+          - front
+          - back
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  card_id:
+                    type: integer
+                  side:
+                    type: string
+                  image_url:
+                    type: string
+                  ocr_processed_data:
+                    type: object
+                    additionalProperties: true
+                required:
+                - card_id
+                - side
+                - image_url
+        '404':
+          description: Сторона не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cards/{card_id}/qr-token:
+    post:
+      tags:
+      - QR
+      summary: Сгенерировать QR для своей визитки (business_cards.qr_token)
+      parameters:
+      - name: card_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrTokenResponse'
+        '404':
+          description: Не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cards/import/qr:
+    post:
+      tags:
+      - QR
+      - Cards
+      summary: 'Добавление чужой визитки: сканирование QR (qr_scans.scanned_data)'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrImportRequest'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  card:
+                    $ref: '#/components/schemas/BusinessCard'
+                  qr_scan_id:
+                    type: integer
+                required:
+                - card
+                - qr_scan_id
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cards/import/photo:
+    post:
+      tags:
+      - OCR
+      - Cards
+      summary: 'Добавление чужой визитки: фото + OCR (card_scans.ocr_*_data)'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoImportRequest'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardScanResponse'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/cards/{card_id}/scans:
+    get:
+      tags:
+      - OCR
+      summary: Список сканов визитки (card_scans)
+      parameters:
+      - name: card_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                  count:
+                    type: integer
+                required:
+                - items
+                - count
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+      - OCR
+      summary: 'Добавить скан к существующей визитке (например: загрузить back side)'
+      parameters:
+      - name: card_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                image_url:
+                  type: string
+                meta:
+                  type: object
+                  additionalProperties: true
+                  description: meta.side=front|back (кладём в ocr_processed_data.meta)
+              required:
+              - image_url
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardScanResponse'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Визитка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/feedback:
+    post:
+      tags:
+      - Feedback
+      summary: Передача обратной связи по продукту (feedback)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackCreateRequest'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackResponse'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/devices:
+    post:
+      tags:
+      - Devices
+      summary: Регистрация устройства (user_devices)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRegisterRequest'
+      responses:
+        '201':
+          description: Создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceResponse'
+        '400':
+          description: Ошибка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Нет/неверный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
